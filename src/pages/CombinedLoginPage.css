@@ -1,0 +1,19 @@
+.combined-login-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 48px;
+  margin-top: 60px;
+}
+.login-card-wrapper {
+  min-width: 340px;
+  max-width: 390px;
+  flex: 1 1 340px;
+}
+@media (max-width: 900px) {
+  .combined-login-container {
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+  }
+}

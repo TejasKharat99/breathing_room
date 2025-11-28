@@ -1,0 +1,206 @@
+.dashboard {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1.5px 5px rgba(0,0,0,0.05);
+}
+.dashboard h1 {
+  font-size: 2.2rem;
+  margin-bottom: 12px;
+  color: #2a3558;
+}
+.dashboard h2 {
+  margin-top: 32px;
+  color: #1e2337;
+}
+.dashboard form {
+  background: #f6f8fa;
+  border-radius: 12px;
+  padding: 18px 20px 12px 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  margin-bottom: 18px;
+}
+.dashboard input, .dashboard textarea {
+  padding: 8px 10px;
+  border: 1.5px solid #bfc7d1;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+.dashboard input:focus, .dashboard textarea:focus {
+  border-color: #3f51b5;
+  outline: none;
+}
+.dashboard button[type="submit"] {
+  background: #3f51b5;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: background 0.2s;
+}
+.dashboard button[type="submit"]:hover {
+  background: #283593;
+}
+.dashboard ul {
+  list-style: none;
+  padding: 0;
+}
+.dashboard ul li {
+  background: #f9fafc;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 3px rgba(60,60,60,0.04);
+  font-size: 1.04rem;
+  color: #232b3e;
+}
+.dashboard ul li strong {
+  color: #3f51b5;
+}
+.dashboard ul li button {
+  background: #3f51b5;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  margin-right: 8px;
+  transition: background 0.2s;
+}
+.dashboard ul li button:hover {
+  background: #283593;
+}
+.delete-venue-btn {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  margin-right: 8px;
+  transition: background 0.2s;
+}
+.delete-venue-btn:hover {
+  background: #b71c1c;
+}
+.edit-venue-btn {
+  background: #3f51b5;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  margin-right: 8px;
+  transition: background 0.2s;
+}
+.edit-venue-btn:hover {
+  background: #283593;
+}
+.cancel-venue-btn {
+  background: #bbb;
+  color: #222;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 18px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  margin-right: 8px;
+  transition: background 0.2s;
+}
+.cancel-venue-btn:hover {
+  background: #999;
+}
+
+.dashboard-flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 56px;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+.venue-form-section {
+  flex: 1 1 350px;
+  background: #f7f8fa;
+  padding: 32px 28px 28px 28px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(60,80,120,0.11);
+  min-width: 340px;
+  max-width: 420px;
+  margin-right: 0;
+  box-sizing: border-box;
+}
+.venue-list-section {
+  flex: 2 1 500px;
+  background: #fff;
+  padding: 32px 28px 28px 28px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(60,80,120,0.11);
+  min-width: 340px;
+  max-width: 650px;
+  max-height: 80vh;
+  overflow-y: auto;
+  margin-left: 0;
+  box-sizing: border-box;
+}
+.venue-list-section ul {
+  padding-left: 18px;
+}
+.venue-list-section li {
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ececec;
+}
+@media (max-width: 1100px) {
+  .dashboard-flex {
+    flex-direction: column;
+    gap: 32px;
+    align-items: stretch;
+  }
+  .venue-form-section, .venue-list-section {
+    max-width: 100%;
+    min-width: 0;
+  }
+}
+
+.dashboard-navbar {
+  width: 100%;
+  background: #3f51b5;
+  color: #fff;
+  padding: 18px 32px 16px 32px;
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(60,80,120,0.11);
+  margin-bottom: 32px;
+  border-radius: 0 0 12px 12px;
+  display: flex;
+  align-items: center;
+}
+.dashboard-title {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.5px;
+}

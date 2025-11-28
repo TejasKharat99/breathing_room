@@ -1,0 +1,15 @@
+node_modules/
+backend/node_modules/
+build/
+dist/
+.env
+.env.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+.vscode/
+.idea/
+docker-compose.override.yml
+*.swp
+*.swo

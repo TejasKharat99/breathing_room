@@ -1,0 +1,143 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #f7f8fa;
+  color: #222;
+}
+
+.centered-form {
+  max-width: 350px;
+  margin: 60px auto;
+  padding: 32px 28px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.centered-form input, .centered-form select {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #d2d8e0;
+  margin-bottom: 10px;
+  font-size: 1rem;
+}
+.centered-form button {
+  background: #0066ff;
+  color: #fff;
+  border: none;
+  padding: 10px 0;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.centered-form button:hover {
+  background: #004bb5;
+}
+.error {
+  color: #e53935;
+  margin-top: 8px;
+}
+.success {
+  color: #388e3c;
+  margin-top: 8px;
+}
+
+.navbar {
+  background: #1565c0;
+  padding: 24px 48px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.navbar a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  margin-right: 28px;
+  font-size: 1.1rem;
+  transition: color 0.2s;
+}
+.navbar a:hover {
+  color: #cbe7ff;
+}
+.nav-links button {
+  background: #e53935;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 18px;
+  margin-left: 14px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.dashboard, .search-page, .listing-details, .my-listings {
+  max-width: 900px;
+  margin: 36px auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  padding: 32px;
+}
+.coming-soon {
+  margin-top: 24px;
+  color: #888;
+  font-style: italic;
+}
+
+.filters {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.filters input, .filters select {
+  padding: 8px 10px;
+  border-radius: 5px;
+  border: 1px solid #d2d8e0;
+  font-size: 1rem;
+}
+.filters button {
+  background: #0066ff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 18px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.2s;
+}
+.filters button:hover {
+  background: #004bb5;
+}
+
+.results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.listing-card {
+  background: #f7f8fa;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 18px 22px;
+  min-width: 220px;
+  flex: 1 1 220px;
+  color: #333;
+}
+
+@media (max-width: 600px) {
+  .dashboard, .search-page, .listing-details, .my-listings {
+    padding: 14px;
+  }
+  .navbar {
+    padding: 14px 10px;
+  }
+  .filters {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

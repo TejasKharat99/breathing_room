@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=/api
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5001"
+    environment:
+      - NODE_ENV=production
+      # Make sure to create a .env file in the backend directory
+      # with your MONGO_URI and JWT_SECRET
+      - PORT=5001
+      - MONGODB_URI=mongodb://mongo:27017/breathing-room
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    networks:
+      - app-network
+    volumes:
+      - ./backend:/app/backend
+      - /app/backend/node_modules
+
+  mongo:
+    image: mongo:6.0
+    volumes:
+      - mongo-data:/data/db
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=breathing-room
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # Optional: MongoDB Web UI (Compass-like)
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=password
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo-data:
+    driver: local
