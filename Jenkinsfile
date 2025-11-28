@@ -86,9 +86,9 @@ spec:
     IMAGE_TAG         = 'latest'
     APP_IMAGE         = "${REGISTRY}/${NAMESPACE}/${APP_NAME}:${IMAGE_TAG}"
 
-    // Sonar settings
+    // Sonar settings - Using internal Kubernetes service name
     SONAR_PROJECT_KEY = '2401100'
-    SONAR_HOST_URL    = 'http://sonarqube.imcc.com'
+    SONAR_HOST_URL    = 'http://sonarqube:9000'  // Using service name for internal Kubernetes DNS
   }
 
   stages {
