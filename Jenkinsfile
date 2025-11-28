@@ -78,7 +78,7 @@ spec:
   }
 
   environment {
-    NAMESPACE         = '2401100'
+    NAMESPACE         = '2401100_Tejas'
     REGISTRY          = 'nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085'
 
     // Updated for single combined image
@@ -87,7 +87,7 @@ spec:
     APP_IMAGE         = "${REGISTRY}/${NAMESPACE}/${APP_NAME}:${IMAGE_TAG}"
 
     // Sonar settings - Using internal Kubernetes service name
-    SONAR_PROJECT_KEY = '2401100'
+    SONAR_PROJECT_KEY = 'sonar-token-2401100'
     SONAR_HOST_URL    = 'http://sonarqube:9000'  // Using service name for internal Kubernetes DNS
   }
 
