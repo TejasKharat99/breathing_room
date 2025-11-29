@@ -1,72 +1,18 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: breathing-room-frontend
-  namespace: production
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: breathing-room-frontend
-  template:
-    metadata:
-      labels:
-        app: breathing-room-frontend
-    spec:
-      containers:
-        - name: frontend
-          image: nexus.example.com/breathing-room/frontend:latest
-          ports:
-            - containerPort: 80
-          env:
-            - name: REACT_APP_API_URL
-              value: "https://api.breathingroom.example.com"
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: breathing-room-backend
-  namespace: production
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: breathing-room-backend
-  template:
-    metadata:
-      labels:
-        app: breathing-room-backend
-    spec:
-      containers:
-        - name: backend
-          image: nexus.example.com/breathing-room/backend:latest
-          ports:
-            - containerPort: 5001
-          envFrom:
-            - secretRef:
-                name: breathing-room-backend-secrets
----
 apiVersion: v1
-kind: Service
+kind: ServiceAccount
 metadata:
-  name: breathing-room-frontend-service
-  namespace: production
-spec:
-  type: LoadBalancer
-  selector:
-    app: breathing-room-frontend
-  ports:
-    - port: 80
-      targetPort: 80
+  name: jenkins
+  namespace: jenkins
 ---
-apiVersion: v1
-kind: Service
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
 metadata:
-  name: breathing-room-backend-service
-  namespace: production
-spec:
-  selector:
-    app: breathing-room-backend
-  ports:
-    - port: 5001
-      targetPort: 5001
+  name: jenkins-sa-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: jenkins

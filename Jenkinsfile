@@ -11,25 +11,23 @@ spec:
   containers:
     - name: node
       image: node:18
-      command:
-        - cat
+      command: ["cat"]
       tty: true
+
     - name: docker
       image: docker:24.0
-      command:
-        - cat
+      command: ["cat"]
       tty: true
+
     - name: sonar
       image: sonarsource/sonar-scanner-cli:latest
-      command:
-        - cat
+      command: ["cat"]
       tty: true
+
     - name: kubectl
       image: bitnami/kubectl:latest
-      command:
-        - cat
+      command: ["cat"]
       tty: true
-  serviceAccountName: jenkins
             '''
         }
     }
