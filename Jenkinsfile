@@ -6,53 +6,46 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    jenkins/label: "2401157-jobfit-anisha-1-mgg"
+    jenkins/label: "2401100-tejaskharat"
 spec:
+  serviceAccountName: jenkins
   containers:
     - name: node
       image: node:18
-      command: ["cat"]
+      command:
+        - cat
       tty: true
-
     - name: docker
-      image: docker:24.0
-      command: ["cat"]
+      image: docker:24-git
+      command:
+        - cat
       tty: true
-
-    - name: sonar
+      volumeMounts:
+        - name: dockersock
+          mountPath: /var/run/docker.sock
+    - name: sonar-scanner
       image: sonarsource/sonar-scanner-cli:latest
-      command: ["cat"]
+      command:
+        - cat
       tty: true
-
-    - name: kubectl
-      image: bitnami/kubectl:latest
-      command: ["cat"]
-      tty: true
-            '''
+  volumes:
+    - name: dockersock
+      hostPath:
+        path: /var/run/docker.sock
+'''
         }
     }
 
     environment {
-        DOCKER_IMAGE = "breathing-room-combined:latest"
-        SONAR_HOST_URL = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
+        IMAGE_NAME = "breathing-room-combined:latest"
     }
 
     stages {
 
-        stage('Initialize') {
+        stage('Checkout') {
             steps {
                 container('node') {
-                    sh '''
-                    echo "🔥 Setting npm configurations..."
-
-                    npm config set registry https://registry.npmjs.org/
-                    npm config set fetch-retries 5
-                    npm config set fetch-retry-factor 10
-                    npm config set fetch-retry-maxtimeout 120000
-                    npm config set fetch-retry-mintimeout 20000
-
-                    export NPM_CONFIG_FETCH_TIMEOUT=120000
-                    '''
+                    git url: 'https://github.com/TejasKharat99/breathing_room.git', branch: 'main'
                 }
             }
         }
@@ -61,8 +54,9 @@ spec:
             steps {
                 container('node') {
                     sh '''
-                    echo "📦 Installing dependencies..."
-                    npm install --force
+                        echo "📦 Installing Node dependencies..."
+                        npm config set registry https://registry.npmjs.org/
+                        npm install
                     '''
                 }
             }
@@ -70,51 +64,53 @@ spec:
 
         stage('SonarQube Analysis') {
             steps {
-                container('sonar') {
+                container('sonar-scanner') {
                     withCredentials([string(credentialsId: 'sqp_c6e9d7afc318b40952b5cd50eaa1b3b0c7cafb11', variable: 'SONAR_TOKEN')]) {
-                        sh '''
-                        echo "🔍 Running SonarQube scan..."
+                        sh """
+                            echo '🔍 Running SonarQube scan...'
 
-                        sonar-scanner \
-                           -Dsonar.projectKey=2401100_Tejas \
-                           -Dsonar.sources=. \
-                           -Dsonar.host.url=$SONAR_HOST_URL \
-                           -Dsonar.login=${SONAR_TOKEN}
-                        '''
+                            sonar-scanner \
+                              -Dsonar.projectKey=2401100_TejasKharat \
+                              -Dsonar.sources=. \
+                              -Dsonar.host.url=http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000 \
+                              -Dsonar.token=$SONAR_TOKEN
+                        """
                     }
                 }
             }
         }
 
-        stage('Docker Build & Push') {
+        stage('Build Docker Image') {
             steps {
                 container('docker') {
-                    sh '''
-                    echo "🐳 Building Docker image..."
-                    docker build -t $DOCKER_IMAGE .
-
-                    echo "🔐 Logging into Docker Hub..."
-                    echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin
-
-                    echo "📤 Pushing image..."
-                    docker push $DOCKER_IMAGE
-                    '''
+                    sh """
+                        echo '🐳 Building Docker Image...'
+                        docker build -t $IMAGE_NAME .
+                    """
                 }
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Push Docker Image') {
             steps {
-                container('kubectl') {
-                    sh '''
-                    echo "🚀 Deploying to Kubernetes..."
-
-                    kubectl set image deployment/breathing-room breathing-room=$DOCKER_IMAGE -n default
-                    kubectl rollout status deployment/breathing-room -n default
-                    '''
+                container('docker') {
+                    withCredentials([usernamePassword(credentialsId: 'DOCKER_HUB', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh """
+                            echo '📤 Pushing Docker Image...'
+                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                            docker tag $IMAGE_NAME $DOCKER_USER/$IMAGE_NAME
+                            docker push $DOCKER_USER/$IMAGE_NAME
+                        """
+                    }
                 }
             }
         }
 
+    }
+
+    post {
+        always {
+            echo "Pipeline Finished."
+        }
     }
 }
