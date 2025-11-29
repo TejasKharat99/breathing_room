@@ -122,21 +122,45 @@ spec:
       }
     }
 
-    stage('SonarQube Analysis') {
-      steps {
-        container('sonar-scanner') {
-          withEnv(["SONAR_TOKEN=sqp_c6e9d7afc318b40952b5cd50eaa1b3b0c7cafb11"]) {
-            sh '''
-            sonar-scanner \
-              -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=${SONAR_HOST_URL} \
-              -Dsonar.token=${SONAR_TOKEN}
-            '''
-          }
-        }
+stage('SonarQube Analysis') {
+  steps {
+    container('sonar-scanner') {
+      withEnv(["SONAR_TOKEN=sqp_c6e9d7afc318b40952b5cd50eaa1b3b0c7cafb11"]) {
+        sh '''
+        echo "🔍 Trying SonarQube endpoints..."
+
+        for URL in \
+          "http://sonarqube:9000" \
+          "http://sonarqube.sonarqube:9000" \
+          "http://sonarqube.sonarqube.svc.cluster.local:9000" \
+          "http://sonarqube.tools:9000" \
+          "http://sonarqube.tools.svc.cluster.local:9000" \
+          "http://sonarqube.default.svc.cluster.local:9000"
+        do
+          echo "Trying $URL ..."
+          if curl --fail -s $URL/api/server/version > /dev/null ; then
+            echo "✔ Working SonarQube endpoint: $URL"
+            export SONAR_HOST_URL=$URL
+            break
+          fi
+        done
+
+        if [ -z "$SONAR_HOST_URL" ]; then
+          echo "❌ Could not detect SonarQube service. Failing..."
+          exit 1
+        fi
+
+        sonar-scanner \
+          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+          -Dsonar.sources=. \
+          -Dsonar.host.url=$SONAR_HOST_URL \
+          -Dsonar.token=${SONAR_TOKEN}
+        '''
       }
     }
+  }
+}
+
 
     stage('Build Combined Docker Image') {
       steps {
