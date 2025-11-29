@@ -71,15 +71,17 @@ spec:
         stage('SonarQube Analysis') {
             steps {
                 container('sonar') {
-                    sh '''
-                    echo "🔍 Running SonarQube scan..."
+                    withCredentials([string(credentialsId: 'sqp_c6e9d7afc318b40952b5cd50eaa1b3b0c7cafb11', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                        echo "🔍 Running SonarQube scan..."
 
-                    sonar-scanner \
-                       -Dsonar.projectKey=2401100_Tejas \
-                       -Dsonar.sources=. \
-                       -Dsonar.host.url=$SONAR_HOST_URL \
-                       -Dsonar.token=sqp_c6e9d7afc318b40952b5cd50eaa1b3b0c7cafb11
-                    '''
+                        sonar-scanner \
+                           -Dsonar.projectKey=2401100_Tejas \
+                           -Dsonar.sources=. \
+                           -Dsonar.host.url=$SONAR_HOST_URL \
+                           -Dsonar.login=${SONAR_TOKEN}
+                        '''
+                    }
                 }
             }
         }
