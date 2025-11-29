@@ -1,29 +1,33 @@
 pipeline {
     agent {
         kubernetes {
-            defaultContainer 'node'
+            label "2401100-tejaskharat-agent"
+            defaultContainer 'jnlp'
             yaml """
 apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    jenkins: breathing-room
+    jenkins/label: "2401100-tejaskharat-agent"
 spec:
   serviceAccountName: jenkins
   containers:
-    - name: node
-      image: node:18
-      command: ['cat']
-      tty: true
-    - name: docker
-      image: docker:24
-      command: ['cat']
+    - name: tools
+      image: docker:24.0.5
+      command:
+        - cat
       tty: true
       volumeMounts:
-        - name: docker-sock
+        - name: dockersock
           mountPath: /var/run/docker.sock
+
+    - name: sonar
+      image: sonarsource/sonar-scanner-cli:latest
+      command:
+        - cat
+      tty: true
   volumes:
-    - name: docker-sock
+    - name: dockersock
       hostPath:
         path: /var/run/docker.sock
 """
@@ -31,78 +35,44 @@ spec:
     }
 
     environment {
-        DOCKER_IMAGE = "breathing-room-combined:latest"
-        DOCKER_REGISTRY = "<CHANGE THIS — your registry>"
+        SONAR_HOST_URL = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
         SONAR_PROJECT_KEY = "2401100_TejasKharat"
-        SONAR_HOST_URL = "<CHANGE THIS — your sonar URL>"
-        SONAR_TOKEN = credentials('sonar-token')   // Add in Jenkins → Credentials
+        SONAR_TOKEN = credentials('sonar-token')
+        DOCKER_IMAGE = "breathing-room-combined:latest"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                checkout scm
-                echo "📥 Code checked out successfully!"
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                container('node') {
-                    sh """
-                        echo "🔧 Installing dependencies..."
-                        npm install --legacy-peer-deps
-                    """
-                }
-            }
-        }
-
-        stage('Build App') {
-            steps {
-                container('node') {
-                    sh """
-                        echo "🏗️ Building project..."
-                        npm run build
-                    """
+                container('tools') {
+                    echo "📥 Checking out repository..."
+                    checkout scm
                 }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                container('node') {
-                    withSonarQubeEnv('MySonarServer') {
-                        sh """
-                        npx sonar-scanner \
-                          -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                          -Dsonar.sources=. \
-                          -Dsonar.host.url=$SONAR_HOST_URL \
-                          -Dsonar.login=$SONAR_TOKEN
-                        """
-                    }
+                container('sonar') {
+                    echo "🔍 Running SonarQube Scan..."
+                    sh """
+                    sonar-scanner \
+                        -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.token=${SONAR_TOKEN}
+                    """
                 }
             }
         }
 
         stage('Docker Build') {
             steps {
-                container('docker') {
+                container('tools') {
+                    echo "🐳 Building Docker image..."
                     sh """
-                        echo "🐳 Building docker image..."
-                        docker build -t $DOCKER_REGISTRY/$DOCKER_IMAGE .
-                    """
-                }
-            }
-        }
-
-        stage('Docker Push') {
-            steps {
-                container('docker') {
-                    sh """
-                        echo "📤 Pushing docker image..."
-                        echo "<CHANGE THIS — your docker password>" | docker login -u "<CHANGE USER>" --password-stdin
-                        docker push $DOCKER_REGISTRY/$DOCKER_IMAGE
+                        docker build -t ${DOCKER_IMAGE} .
                     """
                 }
             }
@@ -111,7 +81,7 @@ spec:
 
     post {
         always {
-            echo "🧹 Cleaning up workspace..."
+            echo "🧹 Cleaning workspace..."
             cleanWs()
         }
     }
