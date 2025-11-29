@@ -1,247 +1,116 @@
 pipeline {
-  agent {
-    kubernetes {
-      yaml '''
+    agent {
+        kubernetes {
+            yaml '''
 apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    jenkins/label: "2401157-jobfit-anisha-1-mggxr"
+    jenkins/label: "2401157-jobfit-anisha-1-mgg"
 spec:
-  restartPolicy: Never
-  nodeSelector:
-    kubernetes.io/os: "linux"
-  volumes:
-    - name: workspace-volume
-      emptyDir: {}
-    - name: kubeconfig-secret
-      secret:
-        secretName: kubeconfig-secret
   containers:
-
     - name: node
       image: node:18
+      command:
+        - cat
       tty: true
-      command: ["cat"]
-      env:
-        - name: NPM_CONFIG_FETCH_RETRIES
-          value: "5"
-        - name: NPM_CONFIG_FETCH_RETRY_FACTOR
-          value: "10"
-        - name: NPM_CONFIG_FETCH_RETRY_MINTIMEOUT
-          value: "20000"
-        - name: NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT
-          value: "120000"
-        - name: NPM_CONFIG_REGISTRY
-          value: "https://registry.npmjs.org/"
-      volumeMounts:
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent
-
-    - name: sonar-scanner
-      image: sonarsource/sonar-scanner-cli
+    - name: docker
+      image: docker:24.0
+      command:
+        - cat
       tty: true
-      command: ["cat"]
-      volumeMounts:
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent
-
+    - name: sonar
+      image: sonarsource/sonar-scanner-cli:latest
+      command:
+        - cat
+      tty: true
     - name: kubectl
       image: bitnami/kubectl:latest
+      command:
+        - cat
       tty: true
-      command: ["cat"]
-      env:
-        - name: KUBECONFIG
-          value: /kube/config
-      securityContext:
-        runAsUser: 0
-      volumeMounts:
-        - name: kubeconfig-secret
-          mountPath: /kube/config
-          subPath: kubeconfig
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent
-
-    - name: dind
-      image: docker:dind
-      args: ["--storage-driver=overlay2", "--insecure-registry=nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085"]
-      securityContext:
-        privileged: true
-      volumeMounts:
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent
-
-    - name: jnlp
-      image: jenkins/inbound-agent:3345.v03dee9b_f88fc-1
-      env:
-        - name: JENKINS_AGENT_NAME
-          value: "2401157-jobfit-anisha-1-mggxr-tcg6j-kntxd"
-        - name: JENKINS_AGENT_WORKDIR
-          value: "/home/jenkins/agent"
-      resources:
-        requests:
-          cpu: "100m"
-          memory: "256Mi"
-      volumeMounts:
-        - name: workspace-volume
-          mountPath: /home/jenkins/agent
-'''
-    }
-  }
-
-  environment {
-    NAMESPACE         = '2401100_Tejas'
-    REGISTRY          = 'nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085'
-
-    APP_NAME          = 'breathing-room-combined'
-    IMAGE_TAG         = 'latest'
-    APP_IMAGE         = "${REGISTRY}/${NAMESPACE}/${APP_NAME}:${IMAGE_TAG}"
-
-    SONAR_PROJECT_KEY = 'sonar-token-2401100'
-  }
-
-  stages {
-
-    stage('Checkout') {
-      steps { checkout scm }
-    }
-
-    stage('Install + Build Frontend') {
-      steps {
-        container('node') {
-          sh '''
-          echo "🔥 Setting npm configurations..."
-          npm config set registry https://registry.npmjs.org/
-          npm config set fetch-retries 5
-          npm config set fetch-retry-factor 10
-          npm config set fetch-retry-maxtimeout 120000
-          npm config set fetch-retry-mintimeout 20000
-          npm config set timeout 120000
-
-          echo "📦 Installing frontend dependencies (with retry)..."
-          retry=0
-          until [ $retry -ge 5 ]
-          do
-            npm install && break
-            retry=$((retry+1))
-            echo "⏳ Retry $retry/5: npm install failed, retrying in 10s..."
-            sleep 10
-          done
-
-          echo "🏗 Building frontend..."
-          npm run build
-          '''
-        }
-      }
-    }
-
-    stage('Install Backend') {
-      steps {
-        container('node') {
-          dir('backend') {
-            sh '''
-            echo "🔥 Setting npm configs for backend..."
-            npm config set registry https://registry.npmjs.org/
-
-            echo "📦 Installing backend dependencies..."
-            retry=0
-            until [ $retry -ge 5 ]
-            do
-              npm install && break
-              retry=$((retry+1))
-              echo "⏳ Retry $retry/5 backend install failed, retrying..."
-              sleep 10
-            done
+  serviceAccountName: jenkins
             '''
-          }
         }
-      }
     }
 
-    stage('SonarQube Analysis') {
-      steps {
-        container('sonar-scanner') {
-          withEnv(["SONAR_TOKEN=sqp_c6e9d7afc318b40952b5cd50eaa1b3b0c7cafb11"]) {
-            sh '''
-            echo "🔍 Detecting SonarQube service..."
-
-            for URL in \
-              "http://sonarqube:9000" \
-              "http://sonarqube.svc.cluster.local:9000" \
-              "http://sonarqube.default.svc.cluster.local:9000" \
-              "http://sonarqube.sonarqube:9000" \
-              "http://sonarqube.sonarqube.svc.cluster.local:9000"
-            do
-              echo "Trying $URL ..."
-              if curl --fail -s $URL/api/server/version > /dev/null ; then
-                echo "✔ SonarQube found at: $URL"
-                export SONAR_HOST_URL=$URL
-                break
-              fi
-            done
-
-            if [ -z "$SONAR_HOST_URL" ]; then
-              echo "❌ SonarQube not found - failing"
-              exit 1
-            fi
-
-            sonar-scanner \
-              -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=$SONAR_HOST_URL \
-              -Dsonar.token=${SONAR_TOKEN}
-            '''
-          }
-        }
-      }
+    environment {
+        DOCKER_IMAGE = "breathing-room-combined:latest"
+        SONAR_HOST_URL = "http://sonarqube.default.svc.cluster.local:9000"
     }
 
-    stage('Build Combined Docker Image') {
-      steps {
-        container('dind') {
-          sh '''
-          echo "🐳 Waiting for Docker daemon..."
-          while ! docker info > /dev/null 2>&1; do sleep 2; done
+    stages {
 
-          docker build -t ${APP_IMAGE} .
-          '''
+        stage('Initialize') {
+            steps {
+                container('node') {
+                    sh '''
+                    echo "🔥 Setting npm configurations..."
+                    npm config set registry https://registry.npmjs.org/
+                    npm config set fetch-retries 5
+                    npm config set fetch-retry-factor 10
+                    npm config set fetch-retry-maxtimeout 120000
+                    npm config set fetch-retry-mintimeout 20000
+
+                    export NPM_CONFIG_FETCH_TIMEOUT=120000
+                    '''
+                }
+            }
         }
-      }
-    }
 
-    stage('Push to Nexus') {
-      steps {
-        container('dind') {
-          withCredentials([usernamePassword(credentialsId: 'nexus-admin', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-            sh '''
-            echo "$NEXUS_PASS" | docker login ${REGISTRY} -u "$NEXUS_USER" --password-stdin
-            docker push ${APP_IMAGE}
-            '''
-          }
+        stage('Install Dependencies') {
+            steps {
+                container('node') {
+                    sh '''
+                    echo "📦 Installing dependencies..."
+                    npm install --force
+                    '''
+                }
+            }
         }
-      }
-    }
 
-    stage('Deploy to Kubernetes') {
-      steps {
-        container('kubectl') {
-          withFileCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG_PATH')]) {
-            sh '''
-            export KUBECONFIG=/kube/config
-
-            kubectl apply -n ${NAMESPACE} -f k8s-deployment.yaml
-            kubectl set image deployment/breathing-room-deployment breathing-room=${APP_IMAGE} -n ${NAMESPACE}
-            kubectl rollout status deployment/breathing-room-deployment -n ${NAMESPACE}
-            '''
-          }
+        stage('Run SonarQube Scan') {
+            steps {
+                container('sonar') {
+                    sh '''
+                    echo "🔍 Running SonarQube scan..."
+                    sonar-scanner \
+                       -Dsonar.projectKey=sonar-token-2401100 \
+                       -Dsonar.sources=. \
+                       -Dsonar.host.url=$SONAR_HOST_URL \
+                       -Dsonar.token=sqp_c6e9d7afc318b40952b5cd50eaa1b3b0c7cafb11
+                    '''
+                }
+            }
         }
-      }
-    }
-  }
 
-  post {
-    success { echo "✅ Pipeline completed successfully!" }
-    failure { echo "❌ Pipeline failed. Check logs." }
-    always { cleanWs() }
-  }
+        stage('Docker Build & Push') {
+            steps {
+                container('docker') {
+                    sh '''
+                    echo "🐳 Building Docker image..."
+                    docker build -t $DOCKER_IMAGE .
+
+                    echo "🔐 Logging into Docker Hub..."
+                    echo "$DOCKER_HUB_TOKEN" | docker login -u "$DOCKER_HUB_USER" --password-stdin
+
+                    echo "📤 Pushing image..."
+                    docker push $DOCKER_IMAGE
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                container('kubectl') {
+                    sh '''
+                    echo "🚀 Deploying to Kubernetes..."
+                    kubectl set image deployment/breathing-room breathing-room=$DOCKER_IMAGE -n default
+                    kubectl rollout status deployment/breathing-room -n default
+                    '''
+                }
+            }
+        }
+    }
 }
