@@ -34,7 +34,7 @@ spec:
 
     environment {
         DOCKER_IMAGE = "breathing-room-combined:latest"
-        SONAR_HOST_URL = "http://sonarqube.default.svc.cluster.local:9000"
+        SONAR_HOST_URL = "http://my-sonarqube-sonarqube.sonarqube.svc.cluster.local:9000"
     }
 
     stages {
@@ -44,6 +44,7 @@ spec:
                 container('node') {
                     sh '''
                     echo "🔥 Setting npm configurations..."
+
                     npm config set registry https://registry.npmjs.org/
                     npm config set fetch-retries 5
                     npm config set fetch-retry-factor 10
@@ -67,13 +68,14 @@ spec:
             }
         }
 
-        stage('Run SonarQube Scan') {
+        stage('SonarQube Analysis') {
             steps {
                 container('sonar') {
                     sh '''
                     echo "🔍 Running SonarQube scan..."
+
                     sonar-scanner \
-                       -Dsonar.projectKey=sonar-token-2401100 \
+                       -Dsonar.projectKey=2401100_Tejas \
                        -Dsonar.sources=. \
                        -Dsonar.host.url=$SONAR_HOST_URL \
                        -Dsonar.token=sqp_c6e9d7afc318b40952b5cd50eaa1b3b0c7cafb11
@@ -104,11 +106,13 @@ spec:
                 container('kubectl') {
                     sh '''
                     echo "🚀 Deploying to Kubernetes..."
+
                     kubectl set image deployment/breathing-room breathing-room=$DOCKER_IMAGE -n default
                     kubectl rollout status deployment/breathing-room -n default
                     '''
                 }
             }
         }
+
     }
 }
