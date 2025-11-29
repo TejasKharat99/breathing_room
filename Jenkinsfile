@@ -81,14 +81,13 @@ spec:
     NAMESPACE         = '2401100_Tejas'
     REGISTRY          = 'nexus-service-for-docker-hosted-registry.nexus.svc.cluster.local:8085'
 
-    // Updated for single combined image
     APP_NAME          = 'breathing-room-combined'
     IMAGE_TAG         = 'latest'
     APP_IMAGE         = "${REGISTRY}/${NAMESPACE}/${APP_NAME}:${IMAGE_TAG}"
 
-    // Sonar settings - Using internal Kubernetes service name
+    // FIXED → Correct internal Kubernetes DNS
     SONAR_PROJECT_KEY = 'sonar-token-2401100'
-    SONAR_HOST_URL    = 'http://sonarqube:9000'  // Using service name for internal Kubernetes DNS
+    SONAR_HOST_URL    = 'http://sonarqube.default.svc.cluster.local:9000'
   }
 
   stages {
@@ -132,7 +131,7 @@ spec:
               -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
               -Dsonar.sources=. \
               -Dsonar.host.url=${SONAR_HOST_URL} \
-              -Dsonar.login=${SONAR_TOKEN}
+              -Dsonar.token=${SONAR_TOKEN}
             '''
           }
         }
